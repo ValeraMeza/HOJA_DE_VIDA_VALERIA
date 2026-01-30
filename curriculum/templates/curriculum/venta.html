@@ -1,0 +1,365 @@
+{% extends 'curriculum/base.html' %}
+{% load static %}
+
+{% block title %}Boutique Garage | {{ perfil.nombres }}{% endblock %}
+
+{% block content %}
+<div class="fade-in relative pb-20 px-4 max-w-7xl mx-auto">
+    
+    <!-- Botón Flotante del Carrito Estilo Sticker -->
+    <div class="fixed top-8 right-8 z-[110] no-print">
+        <button type="button" onclick="toggleCartModal()" class="relative bg-bloom-espresso dark:bg-bloom-accent text-white dark:text-bloom-night p-5 rounded-[2rem] shadow-2xl hover:scale-110 hover:rotate-3 transition-all duration-500 group border-4 border-white dark:border-bloom-night">
+            <i data-lucide="shopping-bag" size="24"></i>
+            <span id="cart-count" class="absolute -top-2 -right-2 bg-bloom-lime text-bloom-espresso text-[10px] font-black w-7 h-7 flex items-center justify-center rounded-full scale-0 transition-transform duration-500 shadow-lg border-2 border-white dark:border-bloom-night">0</span>
+        </button>
+    </div>
+
+    <!-- Encabezado Editorial -->
+    <div class="mb-20 relative">
+        <div class="inline-flex items-center gap-2 mb-4">
+            <span class="text-bloom-accent text-xl">𐙚</span>
+            <span class="text-bloom-accent dark:text-bloom-lime font-black tracking-[0.3em] text-[9px] uppercase">Curated Pre-loved Items</span>
+        </div>
+        <h2 class="text-6xl md:text-8xl font-display font-black italic uppercase tracking-tighter text-bloom-espresso dark:text-white leading-none">
+            Venta de <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-bloom-accent to-bloom-lime">Garage</span>
+        </h2>
+        <div class="h-2 w-32 bg-bloom-lime mt-6 rounded-full shadow-[0_5px_15px_rgba(209,249,133,0.3)]"></div>
+        
+        <!-- Flor sutil de fondo -->
+        <div class="absolute -right-10 -top-10 opacity-5 text-bloom-accent pointer-events-none">
+            <i data-lucide="flower" size="240" stroke-width="0.5"></i>
+        </div>
+    </div>
+
+    <!-- Grid de Productos -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {% for item in productos %}
+        <div class="bg-white dark:bg-bloom-cardDark p-8 rounded-[4rem] border border-bloom-accent/5 dark:border-white/5 shadow-sm relative overflow-hidden group hover:shadow-2xl transition-all duration-700 flex flex-col h-full hover:-translate-y-2">
+            
+            <!-- Etiqueta de Precio Premium -->
+            <div class="absolute right-6 top-6 z-20">
+                <div class="bg-bloom-espresso dark:bg-bloom-accent text-white dark:text-bloom-night px-6 py-2 rounded-2xl shadow-xl transform -rotate-3 group-hover:rotate-0 transition-transform">
+                    <span class="text-xl font-display font-black tracking-tighter">${{ item.precio|floatformat:0 }}</span>
+                </div>
+            </div>
+
+            <!-- Contenedor de Imagen Estilo Galería -->
+            <div class="w-full h-64 mb-8 overflow-hidden rounded-[3rem] bg-bloom-pink/20 dark:bg-bloom-night relative border border-bloom-accent/5 group-hover:bg-white dark:group-hover:bg-bloom-night transition-colors duration-700 p-4">
+                {% if item.imagen %}
+                    <img src="{{ item.imagen.url }}" 
+                         alt="{{ item.nombre_producto|escape }}" 
+                         loading="lazy"
+                         class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-1000">
+                {% else %}
+                    <div class="w-full h-full flex flex-col items-center justify-center text-bloom-accent/20">
+                        <i data-lucide="image" size="48" class="mb-2"></i>
+                        <span class="text-[8px] font-black uppercase tracking-widest">No Visuals</span>
+                    </div>
+                {% endif %}
+
+                <!-- Badges de Estado Bloom & Lime -->
+                <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center z-30">
+                    <div class="px-4 py-1.5 bg-white/90 dark:bg-bloom-cardDark/80 backdrop-blur-md rounded-full shadow-sm border border-white dark:border-white/5 flex items-center gap-2">
+                        {% if item.estado == 'Nuevo' %}
+                            <span class="w-2 h-2 rounded-full bg-bloom-lime animate-pulse"></span>
+                            <span class="text-[9px] font-black text-bloom-espresso dark:text-bloom-lime uppercase tracking-widest">Nuevo</span>
+                        {% elif item.estado == 'Bueno' %}
+                            <span class="w-2 h-2 rounded-full bg-bloom-accent"></span>
+                            <span class="text-[9px] font-black text-bloom-accent uppercase tracking-widest">Buen Estado</span>
+                        {% else %}
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Vintage</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Detalles del Producto -->
+            <div class="px-2 mb-8 flex-grow flex flex-col">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-[10px] font-black text-bloom-accent dark:text-bloom-lime uppercase tracking-[0.2em]">Stock: {{ item.stock }} disponible</span>
+                    <span class="text-gray-300">✦</span>
+                </div>
+                
+                <h3 class="text-3xl font-display font-black uppercase text-bloom-espresso dark:text-white leading-none mb-4 group-hover:text-bloom-accent transition-colors pr-12">
+                    {{ item.nombre_producto }}
+                </h3>
+                
+                <div class="relative">
+                    <p id="desc-{{ item.id }}" class="text-gray-500 dark:text-gray-400 font-body text-sm italic leading-relaxed line-clamp-2 transition-all duration-500">
+                        "{{ item.descripcion }}"
+                    </p>
+                    <button type="button" onclick="toggleDescription('{{ item.id }}')" id="btn-desc-{{ item.id }}" class="text-[9px] font-black uppercase text-bloom-accent mt-3 hover:text-bloom-lime transition-colors tracking-widest">
+                        Detalles +
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Controles de Compra Bloom Style -->
+            <div class="pt-6 border-t border-bloom-pink dark:border-white/5 flex flex-col gap-6 relative z-10 mt-auto">
+                <div class="flex items-center justify-between gap-4">
+                    <!-- Selector de Cantidad -->
+                    <div class="flex items-center bg-bloom-pink/30 dark:bg-bloom-night rounded-2xl p-1 border border-bloom-accent/10">
+                        <button type="button" onclick="decrementQty('{{ item.id }}')" class="p-2 text-bloom-espresso dark:text-bloom-pink hover:text-bloom-accent transition-colors"><i data-lucide="minus" size="14"></i></button>
+                        <input type="number" id="qty-{{ item.id }}" min="1" max="{{ item.stock }}" value="1" class="bg-transparent w-8 text-center font-black text-xs outline-none text-bloom-espresso dark:text-white" readonly>
+                        <button type="button" onclick="incrementQty('{{ item.id }}', {{ item.stock }})" class="p-2 text-bloom-espresso dark:text-bloom-pink hover:text-bloom-accent transition-colors"><i data-lucide="plus" size="14"></i></button>
+                    </div>
+                    
+                    <!-- Botón de Agregar con Efecto Llenado -->
+                    <button 
+                        type="button"
+                        id="add-btn-{{ item.id }}"
+                        data-id="{{ item.id }}"
+                        data-nombre="{{ item.nombre_producto|escapejs }}"
+                        data-precio="{{ item.precio|default:0|floatformat:2 }}"
+                        data-imagen="{{ item.imagen.url|default:'' }}"
+                        data-qty="qty-{{ item.id }}"
+                        data-stock="{{ item.stock|default:0 }}"
+                        onclick="addToCart(this)"
+                        class="group/btn relative flex-grow flex items-center justify-center gap-3 py-5 bg-bloom-espresso dark:bg-bloom-accent text-white dark:text-bloom-night rounded-2xl overflow-hidden transition-all duration-500 font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <div class="absolute inset-0 bg-bloom-lime translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500"></div>
+                        <span class="relative z-10 flex items-center gap-3 group-hover/btn:text-bloom-espresso" id="btn-text-{{ item.id }}">
+                            Agregar <i data-lucide="shopping-cart" size="16" id="btn-icon-{{ item.id }}"></i>
+                        </span>
+                    </button>
+                </div>
+                
+                <div class="flex justify-between items-center opacity-20">
+                    <span class="text-[9px] font-black uppercase tracking-tighter">Colección #{{ item.id }}</span>
+                    <span class="text-xl">✿</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Estado Vacío Bloom Style -->
+        <div class="col-span-full py-40 text-center bg-white dark:bg-bloom-cardDark rounded-[5rem] border-2 border-dashed border-bloom-accent/20">
+            <div class="w-24 h-24 bg-bloom-pink dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
+                <i data-lucide="tag" class="text-bloom-accent/30 w-12 h-12"></i>
+            </div>
+            <h4 class="text-bloom-espresso dark:text-white font-display font-black text-3xl uppercase tracking-tighter">Sold Out</h4>
+            <p class="text-gray-400 font-body italic mt-2">Nuevas joyas aparecerán pronto en esta colección.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal del Carrito Editorial (Slide-in) -->
+<div id="cart-modal" class="fixed inset-0 z-[150] hidden flex justify-end">
+    <div class="absolute inset-0 bg-bloom-espresso/40 backdrop-blur-sm" onclick="toggleCartModal()"></div>
+    <div class="relative w-full max-w-lg bg-white dark:bg-bloom-night shadow-2xl flex flex-col animate-in slide-in-from-right duration-700">
+        
+        <div class="p-12 border-b border-bloom-pink dark:border-white/5 flex justify-between items-center bg-bloom-pink/10 dark:bg-bloom-cardDark/50">
+            <div>
+                <h3 class="text-4xl font-display font-black uppercase tracking-tighter text-bloom-espresso dark:text-white leading-none">Mi Bolsa</h3>
+                <div class="flex items-center gap-3 mt-4">
+                    <span class="text-bloom-accent text-xl">𐙚</span>
+                    <p id="modal-count" class="text-[10px] font-black text-bloom-accent dark:text-bloom-lime uppercase tracking-[0.3em]">0 Artículos Seleccionados</p>
+                </div>
+            </div>
+            <button type="button" onclick="toggleCartModal()" class="w-14 h-14 flex items-center justify-center bg-white dark:bg-bloom-cardDark rounded-2xl shadow-sm border border-bloom-pink/20 hover:rotate-90 transition-all text-bloom-accent">
+                <i data-lucide="x" size="24"></i>
+            </button>
+        </div>
+
+        <div id="cart-items" class="flex-grow overflow-y-auto p-12 space-y-10 no-scrollbar scroll-smooth">
+            <!-- Items se cargan dinámicamente -->
+        </div>
+
+        <div class="p-12 bg-white dark:bg-bloom-night border-t border-bloom-pink dark:border-white/5 space-y-8">
+            <div class="flex justify-between items-end">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Total del pedido</span>
+                <span id="cart-total" class="text-5xl font-display font-black tracking-tighter text-bloom-espresso dark:text-white">$0</span>
+            </div>
+            
+            <a id="whatsapp-checkout" href="#" target="_blank" class="group/check relative w-full py-7 bg-bloom-espresso dark:bg-bloom-accent text-white dark:text-bloom-night rounded-[2.5rem] font-black uppercase text-xs tracking-[0.4em] flex items-center justify-center gap-4 overflow-hidden shadow-2xl transition-transform hover:-translate-y-1">
+                <div class="absolute inset-0 bg-bloom-lime translate-y-full group-hover/check:translate-y-0 transition-transform duration-500"></div>
+                <span class="relative z-10 flex items-center gap-4 group-hover/check:text-bloom-espresso">
+                    <i data-lucide="message-circle" size="20"></i>
+                    Completar Pedido
+                </span>
+            </a>
+            
+            <p class="text-center text-[8px] text-gray-400 uppercase tracking-widest italic">✦ Gestión directa vía WhatsApp ✦</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cart = JSON.parse(localStorage.getItem('garage_cart')) || [];
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCartBadge();
+        checkButtonStates();
+        if (window.lucide) lucide.createIcons();
+    });
+
+    function toggleDescription(id) {
+        const desc = document.getElementById('desc-' + id);
+        const btn = document.getElementById('btn-desc-' + id);
+        if (desc.classList.contains('line-clamp-2')) {
+            desc.classList.remove('line-clamp-2');
+            btn.innerText = 'Ver menos -';
+        } else {
+            desc.classList.add('line-clamp-2');
+            btn.innerText = 'Detalles +';
+        }
+    }
+
+    function incrementQty(id, maxStock) {
+        const input = document.getElementById('qty-' + id);
+        if (input) {
+            let current = parseInt(input.value) || 1;
+            if (current < maxStock) input.value = current + 1;
+        }
+    }
+
+    function decrementQty(id) {
+        const input = document.getElementById('qty-' + id);
+        if (input) {
+            let current = parseInt(input.value) || 1;
+            if (current > 1) input.value = current - 1;
+        }
+    }
+
+    function checkButtonStates() {
+        document.querySelectorAll('[id^="add-btn-"]').forEach(btn => {
+            const id = btn.dataset.id;
+            const stockMax = parseInt(btn.dataset.stock);
+            const existingItem = cart.find(i => i.id === id);
+            const currentQtyInCart = existingItem ? existingItem.quantity : 0;
+            const btnText = document.getElementById('btn-text-' + id);
+
+            if (currentQtyInCart >= stockMax) {
+                btn.disabled = true;
+                if(btnText) btnText.innerHTML = "Límite Alcanzado ✿";
+            } else {
+                btn.disabled = false;
+                if(btnText) btnText.innerHTML = `Agregar <i data-lucide="shopping-cart" size="16"></i>`;
+                if(window.lucide) lucide.createIcons();
+            }
+        });
+    }
+
+    function addToCart(btn) {
+        const id = btn.dataset.id;
+        const nombre = btn.dataset.nombre;
+        const precioRaw = btn.dataset.precio;
+        const imagen = btn.dataset.imagen;
+        const qtyId = btn.dataset.qty;
+        const stockMax = parseInt(btn.dataset.stock);
+
+        const input = document.getElementById(qtyId);
+        const qtyToAdd = input ? parseInt(input.value) : 1;
+        const cleanPrice = parseFloat(precioRaw.replace(',', '.')) || 0;
+        
+        const existingItem = cart.find(i => i.id === id);
+        const currentQtyInCart = existingItem ? existingItem.quantity : 0;
+
+        if (currentQtyInCart + qtyToAdd > stockMax) return;
+
+        if (existingItem) {
+            existingItem.quantity += qtyToAdd;
+        } else {
+            cart.push({ id, name: nombre, price: cleanPrice, image: imagen, quantity: qtyToAdd, stockMax: stockMax });
+        }
+        
+        localStorage.setItem('garage_cart', JSON.stringify(cart));
+        updateCartBadge();
+        checkButtonStates();
+        
+        const btnText = document.getElementById('btn-text-' + id);
+        const originalContent = btnText.innerHTML;
+        btnText.innerHTML = '¡Agregado! ✿';
+        setTimeout(() => { if(!btn.disabled) btnText.innerHTML = originalContent; if(window.lucide) lucide.createIcons(); }, 1500);
+        
+        if(input) input.value = 1;
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        localStorage.setItem('garage_cart', JSON.stringify(cart));
+        renderCart();
+        updateCartBadge();
+        checkButtonStates();
+    }
+
+    function updateCartBadge() {
+        const badge = document.getElementById('cart-count');
+        const totalItems = cart.reduce((acc, curr) => acc + curr.quantity, 0);
+        if (badge) {
+            badge.innerText = totalItems;
+            badge.classList.toggle('scale-0', totalItems === 0);
+            badge.classList.toggle('scale-100', totalItems > 0);
+        }
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cart-items');
+        const totalEl = document.getElementById('cart-total');
+        const checkoutBtn = document.getElementById('whatsapp-checkout');
+        const modalCount = document.getElementById('modal-count');
+        
+        const totalItems = cart.reduce((acc, curr) => acc + curr.quantity, 0);
+        if(modalCount) modalCount.innerText = `${totalItems} Artículos Seleccionados`;
+
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div class="py-32 text-center">
+                    <span class="text-6xl block mb-6 opacity-20">𐙚</span>
+                    <p class="text-gray-300 dark:text-gray-700 font-display font-black uppercase text-xs tracking-[0.3em]">Tu bolsa está vacía</p>
+                </div>`;
+            totalEl.innerText = "$0";
+            checkoutBtn.classList.add('opacity-40', 'pointer-events-none');
+            return;
+        }
+
+        let subtotal = 0;
+        container.innerHTML = cart.map((item, index) => {
+            subtotal += (item.price * item.quantity);
+            return `
+                <div class="flex items-center gap-8 group/item">
+                    <div class="w-24 h-24 bg-bloom-pink/20 dark:bg-bloom-cardDark rounded-3xl overflow-hidden shrink-0 border border-bloom-accent/5 p-2">
+                        ${item.image ? `<img src="${item.image}" class="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal">` : `<div class="w-full h-full flex items-center justify-center text-bloom-accent/20"><i data-lucide="image" size="20"></i></div>`}
+                    </div>
+                    <div class="flex-grow">
+                        <h4 class="text-xs font-display font-black uppercase text-bloom-espresso dark:text-white leading-tight mb-1">${item.name}</h4>
+                        <p class="text-bloom-accent font-black text-[11px] tracking-widest">$${item.price.toFixed(0)} <span class="text-gray-300 mx-2">×</span> ${item.quantity}</p>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
+                        <i data-lucide="trash-2" size="18"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        totalEl.innerText = `$${subtotal.toFixed(0)}`;
+        checkoutBtn.classList.remove('opacity-40', 'pointer-events-none');
+        
+        const message = encodeURIComponent(`¡Hola Valeria! 𐙚 Me encantaría adquirir estas piezas de tu colección:\n\n` + 
+            cart.map(i => `✦ ${i.quantity}x ${i.name} ($${(i.price * i.quantity).toFixed(0)})`).join('\n') + 
+            `\n\n💵 *Total Estimado: $${subtotal.toFixed(0)}*`);
+        
+        const phone = "{% if perfil %}{{ perfil.telefono }}{% endif %}";
+        checkoutBtn.href = `https://wa.me/${phone}?text=${message}`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function toggleCartModal() {
+        const modal = document.getElementById('cart-modal');
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) renderCart();
+    }
+</script>
+
+<style>
+    .font-display { font-family: 'Fraunces', serif; }
+    .font-body { font-family: 'Outfit', sans-serif; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    .fade-in { animation: fadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+{% endblock %}
